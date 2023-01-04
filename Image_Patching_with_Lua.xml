@@ -1,0 +1,166 @@
+<project name="Image_Patching_with_Lua" threads="1" pubsub="auto" heartbeat-interval="1">
+  <metadata>
+    <meta id="studioUploadedBy">sbxtot</meta>
+    <meta id="studioUploaded">1655971636249</meta>
+    <meta id="studioModifiedBy">sbxtot</meta>
+    <meta id="studioModified">1655971645007</meta>
+    <meta id="layout">{"cq1":{"ImageinCSV":{"x":-315,"y":-785},"Lua_PatchingVariables":{"x":-315,"y":-670},"PatchingOfImages":{"x":-315,"y":-560}}}</meta>
+  </metadata>
+  <contqueries>
+    <contquery name="cq1">
+      <windows>
+        <window-source index="pi_EMPTY" name="ImageinCSV">
+          <schema>
+            <fields>
+              <field name="image_id" type="string" key="true"/>
+              <field name="_image_" type="blob"/>
+            </fields>
+          </schema>
+          <connectors>
+            <connector class="fs" name="ImageinCSVConnector">
+              <properties>
+                <property name="type"><![CDATA[pub]]></property>
+                <property name="fsname"><![CDATA[/mnt/data/imageincsv.csv]]></property>
+                <property name="fstype"><![CDATA[csv]]></property>
+              </properties>
+            </connector>
+          </connectors>
+        </window-source>
+        <window-lua events="generate_evt" index="pi_EMPTY" name="Lua_PatchingVariables">
+          <schema>
+            <fields>
+              <field name="image_id" type="string" key="true"/>
+              <field name="_image_" type="blob"/>
+              <field name="patch_y_id" type="int32" key="true"/>
+              <field name="patch_x_id" type="int32" key="true"/>
+              <field name="patch_x" type="int32"/>
+              <field name="patch_y" type="int32"/>
+              <field name="patch_width" type="int32"/>
+              <field name="patch_height" type="int32"/>
+              <field name="patch_id" type="int32" key="true"/>
+            </fields>
+          </schema>
+          <copy><![CDATA[_image_,image_id]]></copy>
+          <code><![CDATA[patches = 4
+image_width = 416
+image_height = 416
+
+patch_id = 0
+patch_y_id = 0
+patch_x_id = 0
+val_x = 0
+val_y = 0
+val_width = 0
+val_height = 0
+
+local events = {}   
+
+function generate_evt(data,context)
+ 
+local events = {}    
+    
+    while (patch_x_id < patches/2) do
+    
+        patch_y_id = 0
+    
+        while (patch_y_id < patches/2) do
+            
+            e = {}
+        
+            e.patch_x = val_x + (image_width / (patches/2))* patch_x_id 
+            e.patch_width = image_width / (patches/2) 
+            e.patch_height = image_height / (patches/2)
+            
+            e.patch_y = val_y + (image_height / (patches/2))* patch_y_id 
+            
+            e.patch_y_id = patch_y_id 
+            e.patch_x_id = patch_x_id
+            
+            patch_y_id = patch_y_id + 1  
+            e.patch_id = patch_id
+
+            events[patch_id] = e
+            
+            patch_id =  patch_id + 1
+          
+        end
+        
+        patch_x_id = patch_x_id + 1 
+    
+    end
+   
+return(events)
+end ]]></code>
+        </window-lua>
+        <window-calculate algorithm="ImageProcessing" name="PatchingOfImages">
+          <schema>
+            <fields>
+              <field name="imagePatches" type="blob"/>
+              <field name="image_id" type="string" key="true"/>
+              <field name="patch_id" type="int32" key="true"/>
+            </fields>
+          </schema>
+          <parameters>
+            <properties>
+              <property name="function"><![CDATA[crop]]></property>
+              <property name="coordType"><![CDATA[RECT]]></property>
+              <property name="preFlip"><![CDATA[-1000]]></property>
+              <property name="x"><![CDATA[0]]></property>
+              <property name="y"><![CDATA[0]]></property>
+              <property name="xMin"><![CDATA[0]]></property>
+              <property name="yMin"><![CDATA[0]]></property>
+              <property name="xMax"><![CDATA[0]]></property>
+              <property name="yMax"><![CDATA[0]]></property>
+              <property name="width"><![CDATA[100]]></property>
+              <property name="height"><![CDATA[100]]></property>
+              <property name="outputWidth"><![CDATA[208]]></property>
+              <property name="outputHeight"><![CDATA[208]]></property>
+              <property name="outputEncoding"><![CDATA[jpg]]></property>
+              <property name="alpha"><![CDATA[0]]></property>
+              <property name="beta"><![CDATA[0]]></property>
+              <property name="delta"><![CDATA[0]]></property>
+              <property name="theta"><![CDATA[0]]></property>
+              <property name="value"><![CDATA[0]]></property>
+              <property name="minValue"><![CDATA[0]]></property>
+              <property name="maxValue"><![CDATA[0]]></property>
+              <property name="type"><![CDATA[0]]></property>
+              <property name="flag1"><![CDATA[0]]></property>
+              <property name="flag2"><![CDATA[0]]></property>
+              <property name="flag3"><![CDATA[0]]></property>
+              <property name="flag4"><![CDATA[0]]></property>
+              <property name="flag5"><![CDATA[0]]></property>
+              <property name="scale"><![CDATA[0]]></property>
+              <property name="resizeType"><![CDATA[basic]]></property>
+              <property name="interpolation"><![CDATA[linear]]></property>
+              <property name="padding"><![CDATA[constant]]></property>
+              <property name="b"><![CDATA[0]]></property>
+              <property name="g"><![CDATA[0]]></property>
+              <property name="r"><![CDATA[0]]></property>
+              <property name="smoothType"><![CDATA[Gaussian]]></property>
+              <property name="kernelHeight"><![CDATA[3]]></property>
+              <property name="kernelWidth"><![CDATA[3]]></property>
+            </properties>
+          </parameters>
+          <input-map>
+            <properties>
+              <property name="imageInput"><![CDATA[_image_]]></property>
+              <property name="xVar"><![CDATA[patch_x]]></property>
+              <property name="yVar"><![CDATA[patch_y]]></property>
+              <property name="widthVar"><![CDATA[patch_width]]></property>
+              <property name="heightVar"><![CDATA[patch_height]]></property>
+            </properties>
+          </input-map>
+          <output-map>
+            <properties>
+              <property name="imageOutput"><![CDATA[imagePatches]]></property>
+            </properties>
+          </output-map>
+        </window-calculate>
+      </windows>
+      <edges>
+        <edge source="ImageinCSV" target="Lua_PatchingVariables"/>
+        <edge source="Lua_PatchingVariables" target="PatchingOfImages" role="data"/>
+      </edges>
+    </contquery>
+  </contqueries>
+</project>
